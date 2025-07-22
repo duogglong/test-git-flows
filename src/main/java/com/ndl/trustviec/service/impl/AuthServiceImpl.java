@@ -53,6 +53,7 @@ public class AuthServiceImpl implements AuthService {
     private final AccountRepository accountRepository;
     private final AccountService accountService;
     private final JwtUtils jwtUtils;
+    private final JobRepository jobRepository;
 
     @Override
     public LoginResponse login(LoginRequest request) {
