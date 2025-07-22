@@ -75,6 +75,21 @@ public class EmailServiceImpl extends BaseService implements EmailService {
         }
         log.info("{}: requestSendMail with request --> {}", getClass().getSimpleName(), request);
 
+        if (StringUtils.isBlank(request.getMailTo())) {
+            log.warn("{}: mailTo is blank", getClass().getSimpleName());
+            throw CommonException.create(HttpStatus.BAD_REQUEST).code(ErrorConstants.BAD_REQUEST);
+        }
+
+        if (StringUtils.isBlank(request.getType())) {
+            log.warn("{}: type is blank", getClass().getSimpleName());
+            throw CommonException.create(HttpStatus.BAD_REQUEST).code(ErrorConstants.BAD_REQUEST);
+        }
+
+        if (request.getVariables() == null || request.getVariables().isEmpty()) {
+            log.warn("{}: variables is null or empty", getClass().getSimpleName());
+            throw CommonException.create(HttpStatus.BAD_REQUEST).code(ErrorConstants.BAD_REQUEST);
+        }
+
         String subject, template;
         // switch (SendEmailType.getType(request.getType())) {
         //     case FIRST_PASSWORD -> {
