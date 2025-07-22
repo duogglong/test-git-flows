@@ -111,6 +111,10 @@ public class AuthServiceImpl implements AuthService {
         otpTransactionRequest.setRequestObject(ObjectMapperUtils.toJson(request));
 
         OtpTransactionResponse otpTransactionResponse = otpTransactionService.sendOtp(otpTransactionRequest);
+        if (Objects.isNull(otpTransactionResponse) || StringUtils.isBlank(otpTransactionResponse.getTransactionId())) {
+            log.warn("{}: Failed to send OTP", getClass().getSimpleName());
+            throw CommonException.create(HttpStatus.INTERNAL_SERVER_ERROR).code(ErrorConstants.OTP_SEND_FAILED);
+        }
 
         response.setOtpTransactionId(otpTransactionResponse.getTransactionId());
 
