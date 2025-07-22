@@ -55,6 +55,14 @@ public class JobServiceImpl extends BaseService implements JobService {
                 .build();
     }
 
+    public PageDataResponse<JobFilterResponse> filte2r(JobFilterRequest request) {
+        Pageable pageable = PageableUtils.of(request.getPage(), request.getSize(), request.getSorts(), false);
+
+        Page<JobFilterResponse> jobs = jobRepository.filter(request.getKeyword(), pageable).map(JobFilterResponse::new);
+
+        return PageDataResponse.of(jobs);
+    }
+
     @Override
     public PageDataResponse<JobFilterResponse> filter(JobFilterRequest request) {
         Pageable pageable = PageableUtils.of(request.getPage(), request.getSize(), request.getSorts(), false);
@@ -66,6 +74,29 @@ public class JobServiceImpl extends BaseService implements JobService {
 
     @Override
     public JobDTO getJobById(Long id) {
+        // Get job
+        JobEntity job = jobRepository.findById(id).orElse(null);
+        if (Objects.isNull(job)) {
+            throw CommonException.create(HttpStatus.BAD_REQUEST).code(ErrorConstants.DATA_IS_NOT_EXIST);
+        }
+        // Get enterprise info
+
+
+        JobDTO response = new JobDTO();
+        response.setId(job.getId());
+        response.setJobTitle(job.getJobTitle());
+        response.setSalary(job.getSalary());
+        response.setSalaryMin(job.getSalaryMin());
+        response.setSalaryMax(job.getSalaryMax());
+        response.setLocation(job.getLocation());
+        response.setDescription(job.getDescription());
+        response.setPositionLevel(job.getPositionLevel());
+        response.setNumberOfVacancies(job.getNumberOfVacancies());
+        response.setWorkingType(job.getWorkingType());
+        return response;
+    }
+
+    public JobDTO getJobById2(Long id) {
         // Get job
         JobEntity job = jobRepository.findById(id).orElse(null);
         if (Objects.isNull(job)) {

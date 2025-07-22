@@ -3,12 +3,11 @@ package com.ndl.trustviec.service.impl;
 import com.ndl.trustviec.common.error.ErrorConstants;
 import com.ndl.trustviec.common.exception.CommonException;
 import com.ndl.trustviec.common.type.EmailType;
+import com.ndl.trustviec.common.type.SendEmailType;
+import com.ndl.trustviec.dto.Email;
 import com.ndl.trustviec.dto.JwtTokenGenerate;
 import com.ndl.trustviec.dto.JwtTokenResponse;
-import com.ndl.trustviec.dto.request.EnterpriseSignUpRequest;
-import com.ndl.trustviec.dto.request.LoginRequest;
-import com.ndl.trustviec.dto.request.OtpTransactionRequest;
-import com.ndl.trustviec.dto.request.SignUpRequest;
+import com.ndl.trustviec.dto.request.*;
 import com.ndl.trustviec.dto.response.EnterpriseSignUpResponse;
 import com.ndl.trustviec.dto.response.LoginResponse;
 import com.ndl.trustviec.dto.response.OtpTransactionResponse;
@@ -22,15 +21,20 @@ import com.ndl.trustviec.service.OtpTransactionService;
 import com.ndl.trustviec.utils.JwtUtils;
 import com.ndl.trustviec.utils.ObjectMapperUtils;
 import com.ndl.trustviec.utils.StringUtils;
+import freemarker.template.Template;
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.util.CollectionUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -122,6 +126,27 @@ public class AuthServiceImpl implements AuthService {
         return response;
     }
 
+    public SignUpResponse signUp2(SignUpRequest request) {
+        log.info("{}: signUp with request --> {}", getClass().getSimpleName(), request);
+
+        // Validate
+        validateSignUp(request);
+
+        SignUpResponse response = new SignUpResponse();
+
+        OtpTransactionRequest otpTransactionRequest = new OtpTransactionRequest();
+        otpTransactionRequest.setEmail(request.getEmail());
+        otpTransactionRequest.setType(EmailType.REGISTRATION);
+        otpTransactionRequest.setRequestObject(ObjectMapperUtils.toJson(request));
+
+        OtpTransactionResponse otpTransactionResponse = otpTransactionService.sendOtp(otpTransactionRequest);
+
+        response.setOtpTransactionId(otpTransactionResponse.getTransactionId());
+
+        return response;
+    }
+
+
     @Override
     public EnterpriseSignUpResponse enterpriseSignUp(EnterpriseSignUpRequest request) {
         log.info("{}: enterpriseSignUp with request --> {}", getClass().getSimpleName(), request);
@@ -190,6 +215,26 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    public void sendHtmlMail(Email email) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
+
+            Template template = freemarkerConfig.getTemplate(email.getTemplate());
+            String htmlContent = FreeMarkerTemplateUtils.processTemplateIntoString(template, email.getVariables());
+
+            helper.setTo(email.getMailTo());
+            helper.setSubject(email.getSubject());
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+//            getMailSender().send(message);
+        } catch (Exception e) {
+            log.warn("{}: Exception --> ", getClass().getSimpleName(), e);
+            throw CommonException.create(HttpStatus.INTERNAL_SERVER_ERROR).code(ErrorConstants.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     private void validateEnterpriseSignUp(EnterpriseSignUpRequest request) {
         if (Objects.isNull(request)) {
             log.warn("{}: request is null", getClass().getSimpleName());
@@ -214,5 +259,29 @@ public class AuthServiceImpl implements AuthService {
             log.warn("{}: password is null", getClass().getSimpleName());
             throw CommonException.create(HttpStatus.BAD_REQUEST).code(ErrorConstants.PASSWORD_INVALID);
         }
+    }
+
+    public void requestSendMail(SendEmailRequest request) {
+        if (Objects.isNull(request) || request.isNull()) {
+            throw CommonException.create(HttpStatus.BAD_REQUEST).code(ErrorConstants.BAD_REQUEST);
+        }
+        log.info("{}: requestSendMail with request --> {}", getClass().getSimpleName(), request);
+
+        String subject, template;
+        switch (SendEmailType.getType(request.getType())) {
+            case FIRST_PASSWORD -> {
+                subject = EmailType.FIRST_PASSWORD.getSubjectVi();
+                template = EmailType.FIRST_PASSWORD.getTemplateVi();
+            }
+            default -> throw CommonException.create(HttpStatus.BAD_REQUEST).code(ErrorConstants.BAD_REQUEST);
+        }
+
+        Email email = Email.builder()
+                .mailTo(request.getMailTo())
+                .subject(subject)
+                .template(template)
+                .variables(request.getVariables())
+                .build();
+        sendHtmlMail(email);
     }
 }
