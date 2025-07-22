@@ -170,6 +170,10 @@ public class AuthServiceImpl implements AuthService {
             throw CommonException.create(HttpStatus.BAD_REQUEST).code(ErrorConstants.EMAIL_DUPLICATE);
         }
 
+        if (StringUtils.isBlank(request.getUsername())) {
+            log.warn("{}: username is null", getClass().getSimpleName());
+            throw CommonException.create(HttpStatus.BAD_REQUEST).code(ErrorConstants.USERNAME_INVALID);
+        }
         if (StringUtils.isBlank(request.getPassword())) {
             log.warn("{}: password is null", getClass().getSimpleName());
             throw CommonException.create(HttpStatus.BAD_REQUEST).code(ErrorConstants.PASSWORD_INVALID);
