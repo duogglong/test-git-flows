@@ -69,6 +69,21 @@ public class EmailServiceImpl extends BaseService implements EmailService {
     }
 
     @Override
+    public void sendTextMail(Email email) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, false, StandardCharsets.UTF_8.name());
+            helper.setTo(email.getMailTo());
+            helper.setSubject(email.getSubject());
+            helper.setText(email.getText(), false);
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.warn("{}: Exception --> ", getClass().getSimpleName(), e);
+            throw CommonException.create(HttpStatus.INTERNAL_SERVER_ERROR).code(ErrorConstants.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
     public void requestSendMail(SendEmailRequest request) {
         if (Objects.isNull(request) || request.isNull()) {
             throw CommonException.create(HttpStatus.BAD_REQUEST).code(ErrorConstants.BAD_REQUEST);
