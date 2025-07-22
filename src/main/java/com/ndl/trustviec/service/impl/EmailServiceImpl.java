@@ -47,9 +47,15 @@ public class EmailServiceImpl extends BaseService implements EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
 
+            // Template template = freemarkerConfig.getTemplate(email.getTemplate());
+            // String htmlContent = FreeMarkerTemplateUtils.processTemplateIntoString(template, email.getVariables());
+
+            // helper.setTo(email.getMailTo());
+            // helper.setSubject(email.getSubject());
+            // helper.setText(htmlContent, true);
+
             Template template = freemarkerConfig.getTemplate(email.getTemplate());
             String htmlContent = FreeMarkerTemplateUtils.processTemplateIntoString(template, email.getVariables());
-
             helper.setTo(email.getMailTo());
             helper.setSubject(email.getSubject());
             helper.setText(htmlContent, true);
