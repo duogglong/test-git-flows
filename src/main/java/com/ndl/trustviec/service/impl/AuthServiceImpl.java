@@ -68,6 +68,11 @@ public class AuthServiceImpl implements AuthService {
                 throw CommonException.create(HttpStatus.UNAUTHORIZED).code(ErrorConstants.UNAUTHORIZED);
             }
 
+            if (StringUtils.isBlank(request.getPassword())) {
+                log.warn("{}: password is null", getClass().getSimpleName());
+                throw CommonException.create(HttpStatus.BAD_REQUEST).code(ErrorConstants.PASSWORD_INVALID);
+            }
+
             List<String> roles = new ArrayList<>();
             if (!CollectionUtils.isEmpty(accountEntity.getRoles())) {
                 roles = accountEntity.getRoles().stream().map(RoleEntity::getRole).toList();
