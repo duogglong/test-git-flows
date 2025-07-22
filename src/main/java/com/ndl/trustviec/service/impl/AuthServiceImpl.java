@@ -53,6 +53,7 @@ public class AuthServiceImpl implements AuthService {
     private final AccountRepository accountRepository;
     private final AccountService accountService;
     private final JwtUtils jwtUtils;
+    private final JobRepository jobRepository;
 
     @Override
     public LoginResponse login(LoginRequest request) {
@@ -66,6 +67,11 @@ public class AuthServiceImpl implements AuthService {
             PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
             if (Objects.isNull(accountEntity)) {
                 throw CommonException.create(HttpStatus.UNAUTHORIZED).code(ErrorConstants.UNAUTHORIZED);
+            }
+
+            if (StringUtils.isBlank(request.getPassword())) {
+                log.warn("{}: password is null", getClass().getSimpleName());
+                throw CommonException.create(HttpStatus.BAD_REQUEST).code(ErrorConstants.PASSWORD_INVALID);
             }
 
             List<String> roles = new ArrayList<>();
@@ -106,6 +112,10 @@ public class AuthServiceImpl implements AuthService {
         otpTransactionRequest.setRequestObject(ObjectMapperUtils.toJson(request));
 
         OtpTransactionResponse otpTransactionResponse = otpTransactionService.sendOtp(otpTransactionRequest);
+        if (Objects.isNull(otpTransactionResponse) || StringUtils.isBlank(otpTransactionResponse.getTransactionId())) {
+            log.warn("{}: Failed to send OTP", getClass().getSimpleName());
+            throw CommonException.create(HttpStatus.INTERNAL_SERVER_ERROR).code(ErrorConstants.OTP_SEND_FAILED);
+        }
 
         response.setOtpTransactionId(otpTransactionResponse.getTransactionId());
 
@@ -133,6 +143,28 @@ public class AuthServiceImpl implements AuthService {
         return response;
     }
 
+    @Override
+    public SaveJobResponse save(SaveJobRequest request) {
+        log.info("{}: ---save job: {}", getClass().getSimpleName(), request);
+
+        JobEntity jobEntity = new JobEntity();
+
+        jobEntity.setJobTitle(request.getJobTitle());
+        jobEntity.setDescription(request.getDescription());
+        jobEntity.setSalary(request.getSalary());
+        jobEntity.setSalaryMin(request.getSalaryMin());
+        jobEntity.setSalaryMax(request.getSalaryMax());
+        jobEntity.setCurrency(request.getCurrency());
+        jobEntity.setLocation(request.getLocation());
+        jobEntity.setExperience(request.getExperience());
+
+        jobEntity = jobRepository.save(jobEntity);
+
+        return SaveJobResponse.builder()
+                .id(jobEntity.getId())
+                .build();
+    }
+
     private void validateSignUp(SignUpRequest request) {
         if (Objects.isNull(request)) {
             log.warn("{}: request is null", getClass().getSimpleName());
@@ -148,6 +180,10 @@ public class AuthServiceImpl implements AuthService {
             throw CommonException.create(HttpStatus.BAD_REQUEST).code(ErrorConstants.EMAIL_DUPLICATE);
         }
 
+        if (StringUtils.isBlank(request.getUsername())) {
+            log.warn("{}: username is null", getClass().getSimpleName());
+            throw CommonException.create(HttpStatus.BAD_REQUEST).code(ErrorConstants.USERNAME_INVALID);
+        }
         if (StringUtils.isBlank(request.getPassword())) {
             log.warn("{}: password is null", getClass().getSimpleName());
             throw CommonException.create(HttpStatus.BAD_REQUEST).code(ErrorConstants.PASSWORD_INVALID);
@@ -167,6 +203,11 @@ public class AuthServiceImpl implements AuthService {
         if (accountService.isExistedEmail((request.getEmail()))) {
             log.warn("{}: email is duplicate", getClass().getSimpleName());
             throw CommonException.create(HttpStatus.BAD_REQUEST).code(ErrorConstants.EMAIL_DUPLICATE);
+        }
+
+        if (StringUtils.isBlank(request.getUsername())) {
+            log.warn("{}: username is null", getClass().getSimpleName());
+            throw CommonException.create(HttpStatus.BAD_REQUEST).code(ErrorConstants.USERNAME_INVALID);
         }
 
         if (StringUtils.isBlank(request.getPassword())) {
