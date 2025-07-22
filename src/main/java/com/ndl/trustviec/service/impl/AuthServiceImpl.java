@@ -133,6 +133,28 @@ public class AuthServiceImpl implements AuthService {
         return response;
     }
 
+    @Override
+    public SaveJobResponse save(SaveJobRequest request) {
+        log.info("{}: ---save job: {}", getClass().getSimpleName(), request);
+
+        JobEntity jobEntity = new JobEntity();
+
+        jobEntity.setJobTitle(request.getJobTitle());
+        jobEntity.setDescription(request.getDescription());
+        jobEntity.setSalary(request.getSalary());
+        jobEntity.setSalaryMin(request.getSalaryMin());
+        jobEntity.setSalaryMax(request.getSalaryMax());
+        jobEntity.setCurrency(request.getCurrency());
+        jobEntity.setLocation(request.getLocation());
+        jobEntity.setExperience(request.getExperience());
+
+        jobEntity = jobRepository.save(jobEntity);
+
+        return SaveJobResponse.builder()
+                .id(jobEntity.getId())
+                .build();
+    }
+
     private void validateSignUp(SignUpRequest request) {
         if (Objects.isNull(request)) {
             log.warn("{}: request is null", getClass().getSimpleName());
