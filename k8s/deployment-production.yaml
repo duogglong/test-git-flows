@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recruitment-v1
+spec:
+  selector:
+    matchLabels:
+      app: recruitment-pod
+  template:
+    metadata:
+      labels:
+        app: recruitment-pod
+    spec:
+      containers:
+        - name: recruitment-pod
+          image: REGION_REGISTRY/GOOGLE_PROJECT/REGISTRY_PROJECT/production/one-man-work:VERSION
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9988
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "SPRING_PROFILES_ACTIVE_VARIABLE"
+            - name: DATABASE_URL
+              value: "DATABASE_URL_VARIABLE"
+            - name: DATABASE_USERNAME
+              value: "DATABASE_USERNAME_VARIABLE"
+            - name: DATABASE_PASSWORD
+              value: "DATABASE_PASSWORD_VARIABLE"

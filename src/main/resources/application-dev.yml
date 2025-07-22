@@ -1,0 +1,68 @@
+server:
+  port: ${APP_PORT:9988}
+  servlet:
+    context-path: /api
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://35.184.92.157:5432/reta-database?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&useSSL=false}
+    username: ${DATABASE_USERNAME:reta}
+    password: ${DATABASE_PASSWORD:ReTa@2025!}
+    #    url: ${DATABASE_URL:jdbc:postgresql://aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&useSSL=false}
+    #    username: ${DATABASE_USERNAME:postgres.jmojdxyjbqqmswgvbekb}
+    #    password: ${DATABASE_PASSWORD:ytOtrx9OfBuZOLXT}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      schema: reta-uat
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate.format_sql: true
+      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+      # modify batch size as necessary
+      hibernate.jdbc.batch_size: 25
+      hibernate.order_inserts: true
+      hibernate.order_updates: true
+      # modify fetch size as necessary
+      hibernate.jdbc.fetch_size: 200
+      hibernate.criteria.literal_handling_mode: BIND
+      hibernate.query.fail_on_pagination_over_collection_fetch: true
+      hibernate.query.in_clause_parameter_padding: true
+      hibernate.jdbc.lob.non_contextual_creation: true
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:viellasolutions@gmail.com}
+    password: ${MAIL_PASSWORD:mufjotbazgkzwevw}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+jwt:
+  token:
+    secret: ${AUTH_TOKEN_SECRET:c8b3718e-c9cc-4ff4-a28b-7a07b5e06b9c}
+    expire-time-access-token: ${AUTH_EXPIRE_TIME_ACCESS_TOKEN:3600000} # 1 hour
+    expire-time-refresh-token: ${AUTH_EXPIRE_TIME_REFRESH_TOKEN:2419200000} # 1 month
+springdoc:
+  api-docs:
+    path: /v3/api-docs # URL: context-path/v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html # URL: context-path/swagger-ui.html
+
+supabase:
+  storage:
+    base-url: ${SUPABASE_BASE_URL:https://jmojdxyjbqqmswgvbekb.supabase.co}
+    api-key: ${SUPABASE_STORAGE_API_KEY:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptb2pkeHlqYnFxbXN3Z3ZiZWtiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcwNTE2Njg0MCwiZXhwIjoyMDIwNzQyODQwfQ.CBxc_4a6u1I6gPxUDgS1tQEcUoz1qQXXaQEA4zQMOeo}
+    bucket: ${SUPABASE_STORAGE_BUCKET:reta}
+    folder-post: ${SUPABASE_STORAGE_FOLDER_POST:posts}
+    effective-url-time: ${SUPABASE_EFFECTIVE_URL_TIME:31536000} # 1 year
+    get-file-uri: ${SUPABASE_GET_FILE_URL:https://jmojdxyjbqqmswgvbekb.supabase.co/storage/v1}
+
